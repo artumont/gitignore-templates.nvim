@@ -1,0 +1,159 @@
+*gitignore-templates.txt*  Fetch and apply .gitignore templates from GitHub
+
+Author: artumont
+License: MIT
+
+==============================================================================
+CONTENTS                                        *gitignore-templates-contents*
+
+  1. Introduction .................. |gitignore-templates-introduction|
+  2. Requirements .................. |gitignore-templates-requirements|
+  3. Setup ......................... |gitignore-templates-setup|
+  4. Commands ...................... |gitignore-templates-commands|
+  5. API ........................... |gitignore-templates-api|
+  6. Telescope Integration ......... |gitignore-templates-telescope|
+  7. Configuration ................. |gitignore-templates-configuration|
+
+==============================================================================
+1. INTRODUCTION                              *gitignore-templates-introduction*
+
+gitignore-templates.nvim is a Neovim plugin that lets you quickly fetch,
+preview, and apply `.gitignore` templates from the official github/gitignore
+repository (https://github.com/github/gitignore).
+
+Features:
+  - Offline-first: ships with a pre-bundled snapshot of ~310 templates
+  - Local caching of both the template list and individual templates
+  - Async fetching via `curl` (no blocking the UI)
+  - Integrates with `vim.ui.select` (works with Telescope, fzf-lua, etc.)
+  - Optional native Telescope extension with cached preview
+  - Smart `.gitignore` placement: finds git root or falls back to cwd
+  - Append/Overwrite/Cancel prompt for existing files
+
+==============================================================================
+2. REQUIREMENTS                              *gitignore-templates-requirements*
+
+  - Neovim >= 0.9.0
+  - `curl` available in PATH (for fetching templates)
+  - Optional: telescope.nvim (for enhanced picker + preview)
+
+==============================================================================
+3. SETUP                                          *gitignore-templates-setup*
+
+Add the plugin with your favorite package manager, then call setup: >lua
+
+  require("gitignore-templates").setup({
+    -- All options are optional; defaults shown below
+    cache_dir = vim.fn.stdpath("cache") .. "/gitignore-templates/",
+    base_url = "https://raw.githubusercontent.com/github/gitignore/main/",
+    api_url = "https://api.github.com/repos/github/gitignore/git/trees/main?recursive=1",
+    header = "### Gitignore Template: %s ###",
+    notify = true,
+  })
+<
+
+If using lazy.nvim: >lua
+
+  {
+    "artumont/gitignore-templates.nvim",
+    cmd = { "Gitignore", "GitignoreUpdate", "GitignoreClear" },
+    opts = {},
+  }
+<
+
+==============================================================================
+4. COMMANDS                                    *gitignore-templates-commands*
+
+                                                               *:Gitignore*
+:Gitignore
+    Open the template selector. Pick a template to fetch and apply it to
+    the `.gitignore` in your git root (or cwd). If a `.gitignore` already
+    exists, you will be prompted to Append, Overwrite, or Cancel.
+
+                                                         *:GitignoreUpdate*
+:GitignoreUpdate
+    Fetch the latest template list from the GitHub API and update the
+    local cache. This does NOT update individual template contents; those
+    are re-fetched on next use if not already cached.
+
+                                                          *:GitignoreClear*
+:GitignoreClear
+    Delete all cached data (template list and downloaded templates).
+    Forces fresh downloads on next use.
+
+==============================================================================
+5. API                                              *gitignore-templates-api*
+
+                                    *gitignore-templates.setup()*
+require("gitignore-templates").setup({opts})
+    Initialize the plugin. See |gitignore-templates-configuration| for
+    available options.
+
+                                    *gitignore-templates.select_and_apply()*
+require("gitignore-templates").select_and_apply()
+    Programmatically trigger the template selection and apply flow.
+    Equivalent to |:Gitignore|.
+
+                                    *gitignore-templates.update_list()*
+require("gitignore-templates").update_list()
+    Programmatically update the template list cache.
+    Equivalent to |:GitignoreUpdate|.
+
+                                    *gitignore-templates.clear_cache()*
+require("gitignore-templates").clear_cache()
+    Programmatically clear all cached data.
+    Equivalent to |:GitignoreClear|.
+
+==============================================================================
+6. TELESCOPE INTEGRATION                    *gitignore-templates-telescope*
+
+If telescope.nvim is installed, you can load the extension: >lua
+
+  require("telescope").load_extension("gitignore")
+<
+
+Then use: >vim
+
+  :Telescope gitignore
+<
+
+The Telescope picker provides fuzzy search over all templates and shows
+a preview of cached templates directly in the preview pane.
+
+==============================================================================
+7. CONFIGURATION                          *gitignore-templates-configuration*
+
+                                                    *gitignore-templates.cache_dir*
+cache_dir ~
+    Type: `string`
+    Default: `vim.fn.stdpath("cache") .. "/gitignore-templates/"`
+    Directory for storing cached template list and downloaded templates.
+
+                                                    *gitignore-templates.base_url*
+base_url ~
+    Type: `string`
+    Default: `"https://raw.githubusercontent.com/github/gitignore/main/"`
+    Base URL for fetching raw template content.
+
+                                                    *gitignore-templates.api_url*
+api_url ~
+    Type: `string`
+    Default: GitHub API trees endpoint for github/gitignore
+    URL used by |:GitignoreUpdate| to fetch the template directory tree.
+
+                                                    *gitignore-templates.header*
+header ~
+    Type: `string|nil`
+    Default: `"### Gitignore Template: %s ###"`
+    Format string for the header added when writing/appending templates.
+    Use `%s` as a placeholder for the template name. Set to `nil` to
+    disable headers entirely.
+
+                                                    *gitignore-templates.notify*
+notify ~
+    Type: `boolean`
+    Default: `true`
+    Whether to show notification messages via `vim.notify`.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
