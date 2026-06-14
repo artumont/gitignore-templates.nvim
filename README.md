@@ -24,6 +24,7 @@ require("gitignore-templates").setup({
   api_url = "https://api.github.com/repos/github/gitignore/git/trees/main?recursive=1",
   header = "### Gitignore Template: %s ###",  -- set to nil to disable
   notify = true,
+  prefer_cwd = true,
 })
 ```
 
